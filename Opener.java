@@ -18,9 +18,9 @@ import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.UnauthorizedResponse;
 
 public abstract class Opener implements Callable<Integer> {
-    private static String nukiBridgeUrl = "http://%s:8080/lockAction?token=%s&nukiId=%s&deviceType=%d&action=%d";
-    private String nukiBridgeIp = System.getenv("DOP_IP");
-    private String nukiBridgeToken = System.getenv("DOP_TOKEN");
+    private static final String nukiBridgeUrl = "http://%s:8080/lockAction?token=%s&nukiId=%s&deviceType=%d&action=%d";
+    private final String nukiBridgeIp = System.getenv("DOP_IP");
+    private final String nukiBridgeToken = System.getenv("DOP_TOKEN");
     private Map<String, String> doorIds;
  
     private static class FailedAuth {
@@ -28,7 +28,7 @@ public abstract class Opener implements Callable<Integer> {
         int count;
     }
 
-    private Map<String, FailedAuth> failedAuths;
+    private final Map<String, FailedAuth> failedAuths = new HashMap<>();
 
     @Override
     public Integer call() throws Exception {
@@ -45,7 +45,7 @@ public abstract class Opener implements Callable<Integer> {
         System.out.println("Takida Door Opener Proxy started on port 8080");
         app.before(ctx -> {
             if (!authorized(ctx)) {
-                System.out.println("Received unauthorized request : " + ctx.req);
+                System.out.println("Received unauthorized request : " + ctx.req + " from " + ctx.req.getRemoteAddr());
                 throw new UnauthorizedResponse();
             }
         });
@@ -68,20 +68,21 @@ public abstract class Opener implements Callable<Integer> {
 
     public abstract boolean authorized(Context ctx);
 
-    protected void logAuth(String id, boolean success) {
+    protected synchronized void logAuth(String id, boolean success) {
         if (success) {
             failedAuths.remove(id);
         } else {
             FailedAuth fa = failedAuths.get(id);
             if (fa == null || blockedEnough(fa)) {
-                failedAuths.put(id, new FailedAuth());
+                fa = new FailedAuth();
+                failedAuths.put(id, fa);
             }
             fa.last = Instant.now();
             fa.count++;
         }
     }
 
-    protected boolean isBlocked(String id) {
+    protected synchronized boolean isBlocked(String id) {
         FailedAuth fa = failedAuths.get(id);
         return fa != null && fa.count >= getMaxAuthIntents() && !blockedEnough(fa);
     }
