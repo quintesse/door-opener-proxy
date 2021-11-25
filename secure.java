@@ -27,11 +27,11 @@ class secure extends Opener {
     }
 
     @Override
-    public boolean authorized(Context ctx) {
+    public String authorized(Context ctx) {
         String ip = ctx.req.getRemoteAddr();
         if (isBlocked(ip)) {
             System.out.println("IP is blocked: " + ip);
-            return false;
+            return null;
         }
 
         String ts = ctx.req.getParameter("ts");
@@ -41,13 +41,13 @@ class secure extends Opener {
         if (ts == null || cd == null || usr == null || hash == null) {
             System.out.println("Missing parameters for authentication, need: ts, cd, usr, hash");
             logAuth(ip, false);
-            return false;
+            return null;
         }
 
         if (!usrPwds.containsKey(usr)) {
             System.out.println("Unknown user: " + usr);
             logAuth(ip, false);
-            return false;
+            return null;
         }
 
         //TODO check timestamp is more-or-less recent
@@ -66,18 +66,18 @@ class secure extends Opener {
                 System.out.println("Hashes don't match, given: " + hash + ", expected: " + hashcheck);
                 logAuth(ip, false);
                 logAuth(usr, false);
-                return false;
+                return null;
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
+            return null;
         }
 
         logAuth(ip, true);
         logAuth(usr, true);
         System.out.println("User authorized: " + usr);
 
-        return true;
+        return usr;
     }
 
     public static void main(String... args) throws Exception {

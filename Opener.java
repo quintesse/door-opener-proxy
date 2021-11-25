@@ -7,6 +7,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -22,6 +23,7 @@ public abstract class Opener implements Callable<Integer> {
     private final String nukiBridgeIp = System.getenv("DOP_IP");
     private final String nukiBridgeToken = System.getenv("DOP_TOKEN");
     private Map<String, String> doorIds;
+    private Map<String, String> doorRights;
  
     private static class FailedAuth {
         Instant last;
@@ -33,40 +35,62 @@ public abstract class Opener implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         String doors = System.getenv("DOP_DOORS");
-        if (doors == null || nukiBridgeIp == null || nukiBridgeToken == null) {
+        String rights = System.getenv("DOP_RIGHTS");
+        if (doors == null || rights == null || nukiBridgeIp == null || nukiBridgeToken == null) {
             System.out.println("Missing DOP_USERS, DOP_DOORS, DOP_IP and/or DOP_TOKEN environment variables");
             System.exit(1);
         }
         doorIds = toMap(doors);
+        doorRights = toMap(rights);
         
         System.out.println("Doors: " + doorIds.keySet());
+        System.out.println("Rights: " + doorRights);
 
         Javalin app = Javalin.create().start(8080);
         System.out.println("Takida Door Opener Proxy started on port 8080");
         app.before(ctx -> {
-            if (!authorized(ctx)) {
+            String usr = authorized(ctx);
+            if (usr == null) {
                 System.out.println("Received unauthorized request : " + ctx.req + " from " + ctx.req.getRemoteAddr());
                 throw new UnauthorizedResponse();
             }
+            ctx.attribute("authUser", usr);
         });
         app.get("/open", ctx -> {
-            System.out.println("Received request for opening a door : " + ctx.req);
+            String usr = ctx.attribute("authUser");
             String door = ctx.req.getParameter("door");
+            System.out.println(String.format("User %s requesting to open door: %s", usr, door));
             if (door == null || !doorIds.containsKey(door)) {
                 System.out.println("Unknown door : " + door);
                 throw new BadRequestResponse();
+            }
+            if (door != null && !allowed(usr, door)) {
+                System.out.println(String.format("User %s not allowed to use door: %s", usr, door));
+                throw new UnauthorizedResponse();
             }
             if (!openDoor(door)) {
                 System.out.println("Unable to open door : " + door);
                 throw new InternalServerErrorResponse("Fail");
             }
+            System.out.println("Opened door successfully: " + door);
             ctx.result("OK");
         });
         
         return 0;
     }
 
-    public abstract boolean authorized(Context ctx);
+    /**
+     * Should check if the request is authorized and must return
+     * an authenticated user id
+     * @param ctx Request context
+     * @return A user id
+     */
+    public abstract String authorized(Context ctx);
+
+    protected boolean allowed(String id, String door) {
+        String rights = doorRights.get(id);
+        return rights != null &&  Arrays.asList(rights.split(":")).contains(door);
+    }
 
     protected synchronized void logAuth(String id, boolean success) {
         if (success) {

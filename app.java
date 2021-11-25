@@ -15,7 +15,7 @@ class app extends Opener {
     public Integer call() throws Exception {
         String users = System.getenv("DOP_USERS");
         if (users == null) {
-            System.out.println("Missing DOP_USERS environment variable");
+            System.out.println("Missing DOP_USERS and/or DOP_RIGHTS environment variables");
             return 1;
         }
         usrPwds = toMap(users);
@@ -26,17 +26,17 @@ class app extends Opener {
     }
 
     @Override
-    public boolean authorized(Context ctx) {
+    public String authorized(Context ctx) {
         String ip = ctx.req.getRemoteAddr();
         if (isBlocked(ip)) {
             System.out.println("IP is blocked: " + ip);
-            return false;
+            return null;
         }
         String token = ctx.req.getParameter("token");
         if (token == null) {
             System.out.println("Missing parameter for authentication, need: token");
             logAuth(ip, false);
-            return false;
+            return null;
         }
 
         String usr = null;
@@ -46,15 +46,15 @@ class app extends Opener {
             }
         }
         if (usr == null) {
-            System.out.println("Unknown user");
+            System.out.println("No user for provided token: " + token);
             logAuth(ip, false);
-            return false;
+            return null;
         }
 
         logAuth(ip, true);
         System.out.println("User authorized: " + usr);
 
-        return true;
+        return usr;
     }
 
     public static void main(String... args) throws Exception {
