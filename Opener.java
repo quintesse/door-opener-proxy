@@ -1,10 +1,12 @@
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -86,6 +88,22 @@ public abstract class Opener implements Callable<Integer> {
      * @return A user id
      */
     public abstract String authorized(Context ctx);
+
+    protected String hash(String... args) {
+        return hash(String.join(",", args));
+    }
+
+    protected String hash(String msg) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            byte[] messageDigest = md.digest(msg.getBytes());
+            BigInteger no = new BigInteger(1, messageDigest);
+            return no.toString(16);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
 
     protected boolean allowed(String id, String door) {
         String rights = doorRights.get(id);

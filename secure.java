@@ -54,22 +54,11 @@ class secure extends Opener {
 
         //TODO check the random code is not being re-used
         
-        try {
-            String txt = ts + "," + cd + "," + usrPwds.get(usr);
-
-            MessageDigest md = MessageDigest.getInstance("SHA-512");
-            byte[] messageDigest = md.digest(txt.getBytes());
-            BigInteger no = new BigInteger(1, messageDigest);
-            String hashcheck = no.toString(16);
-
-            if (!hash.equalsIgnoreCase(hashcheck)) {
-                System.out.println("Hashes don't match, given: " + hash + ", expected: " + hashcheck);
-                logAuth(ip, false);
-                logAuth(usr, false);
-                return null;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        String hashcheck = hash(ts, cd, usrPwds.get(usr));
+        if (!hash.equalsIgnoreCase(hashcheck)) {
+            System.out.println("Hashes don't match, given: " + hash + ", expected: " + hashcheck);
+            logAuth(ip, false);
+            logAuth(usr, false);
             return null;
         }
 
