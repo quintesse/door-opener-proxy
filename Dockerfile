@@ -1,17 +1,26 @@
-FROM jbangdev/jbang-action
+FROM jbangdev/jbang-action as build
 
 ARG APP=app
-ENV APPJAR=$APP.jar
+
+WORKDIR /app
+
+ADD * src/
+
+RUN jbang build src/$APP.java ; \
+    jbang export portable src/$APP.java
+
+FROM openjdk:11-jre-slim
+
+ARG APP=app
 
 EXPOSE 8080
 
 WORKDIR /app
 
-ADD *.java src/
+ENV APPJAR=$APP.jar
 
-RUN jbang build src/$APP.java ; \
-    jbang export local src/$APP.java ; \
-    rm -rf src
+COPY --from=build /app/$APPJAR .
+COPY --from=build /app/libs libs/
 
 ENTRYPOINT java -jar $APPJAR
 
