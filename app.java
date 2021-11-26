@@ -15,7 +15,7 @@ class app extends Opener {
     public Integer call() throws Exception {
         String users = System.getenv("DOP_USERS");
         if (users == null) {
-            System.out.println("Missing DOP_USERS and/or DOP_RIGHTS environment variables");
+            System.out.println("Missing DOP_USERS environment variable");
             return 1;
         }
         usrPwds = toMap(users);

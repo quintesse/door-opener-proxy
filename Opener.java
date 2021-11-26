@@ -22,7 +22,7 @@ import io.javalin.http.UnauthorizedResponse;
 
 public abstract class Opener implements Callable<Integer> {
     private static final String nukiBridgeUrl = "http://%s:8080/lockAction?token=%s&nukiId=%s&deviceType=%d&action=%d";
-    private final String nukiBridgeIp = System.getenv("DOP_IP");
+    private final String nukiBridgeHost = System.getenv("DOP_HOST");
     private final String nukiBridgeToken = System.getenv("DOP_TOKEN");
     private Map<String, String> doorIds;
     private Map<String, String> doorRights;
@@ -38,8 +38,8 @@ public abstract class Opener implements Callable<Integer> {
     public Integer call() throws Exception {
         String doors = System.getenv("DOP_DOORS");
         String rights = System.getenv("DOP_RIGHTS");
-        if (doors == null || rights == null || nukiBridgeIp == null || nukiBridgeToken == null) {
-            System.out.println("Missing DOP_USERS, DOP_DOORS, DOP_IP and/or DOP_TOKEN environment variables");
+        if (doors == null || rights == null || nukiBridgeHost == null || nukiBridgeToken == null) {
+            System.out.println("Missing DOP_DOORS, DOP_RIGHTS, DOP_HOST and/or DOP_TOKEN environment variables");
             System.exit(1);
         }
         doorIds = toMap(doors);
@@ -147,7 +147,7 @@ public abstract class Opener implements Callable<Integer> {
         String doorId = id_type[0];
         int devType = Integer.valueOf(id_type[1]);
         int action = 3;
-        String uri = String.format(nukiBridgeUrl, nukiBridgeIp, nukiBridgeToken, doorId, devType, action);
+        String uri = String.format(nukiBridgeUrl, nukiBridgeHost, nukiBridgeToken, doorId, devType, action);
         return sendOpenRequest(uri);
     }
 
