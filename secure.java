@@ -3,8 +3,6 @@
 //DEPS io.javalin:javalin:4.1.1 org.slf4j:slf4j-simple:1.7.31
 //SOURCES Opener.java
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.Map;
 
 import io.javalin.http.Context;
@@ -28,7 +26,7 @@ class secure extends Opener {
 
     @Override
     public String authorized(Context ctx) {
-        String ip = ctx.req.getRemoteAddr();
+        String ip = getRemoteAddress(ctx);
         if (isBlocked(ip)) {
             System.out.println("IP is blocked: " + ip);
             return null;

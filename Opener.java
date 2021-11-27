@@ -90,11 +90,19 @@ public abstract class Opener implements Callable<Integer> {
      */
     public abstract String authorized(Context ctx);
 
-    protected String hash(String... args) {
+    protected String getRemoteAddress(Context ctx) {
+        String address = ctx.header("X-Real-IP");
+        if (address == null) {
+            address = ctx.req.getRemoteAddr();
+        }
+        return address;
+    }
+
+    protected static String hash(String... args) {
         return hash(String.join(",", args));
     }
 
-    protected String hash(String msg) {
+    protected static String hash(String msg) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
             byte[] messageDigest = md.digest(msg.getBytes());

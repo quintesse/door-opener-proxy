@@ -27,7 +27,7 @@ class app extends Opener {
 
     @Override
     public String authorized(Context ctx) {
-        String ip = ctx.req.getRemoteAddr();
+        String ip = getRemoteAddress(ctx);
         if (isBlocked(ip)) {
             System.out.println("IP is blocked: " + ip);
             return null;
