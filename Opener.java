@@ -50,10 +50,11 @@ public abstract class Opener implements Callable<Integer> {
 
         Javalin app = Javalin.create().start(8080);
         System.out.println("Takida Door Opener Proxy started on port 8080");
-        app.before(ctx -> {
+        app.before("/open", ctx -> {
             String usr = authorized(ctx);
             if (usr == null) {
                 System.out.println("Received unauthorized request : " + ctx.req + " from " + ctx.req.getRemoteAddr());
+                System.out.println("Headers: " + ctx.headerMap());
                 throw new UnauthorizedResponse();
             }
             ctx.attribute("authUser", usr);
