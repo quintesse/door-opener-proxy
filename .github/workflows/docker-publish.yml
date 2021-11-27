@@ -1,0 +1,24 @@
+name: Docker Image Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the insecure Docker image
+      run: docker build . --file Dockerfile --tag quintesse/door-opener-proxy:insecure-${GITHUB_REF_NAME}
+    - name: Build the secure Docker image
+      run: docker build . --file Dockerfile --tag quintesse/door-opener-proxy:secure-${GITHUB_REF_NAME}
+    - name: Tag latest insecure Docker image
+      run: docker tag quintesse/door-opener-proxy:insecure-${GITHUB_REF_NAME} quintesse/door-opener-proxy:insecure-latest
+    - name: Tag latest secure Docker image
+      run: docker tag quintesse/door-opener-proxy:secure-${GITHUB_REF_NAME} quintesse/door-opener-proxy:secure-latest
+      
