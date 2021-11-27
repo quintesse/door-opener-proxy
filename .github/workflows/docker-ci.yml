@@ -1,0 +1,20 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the insecure Docker image
+      run: docker build . --file Dockerfile --tag quintesse/door-opener-proxy:insecure-${GITHUB_SHA::6}
+    - name: Build the secure Docker image
+      run: docker build . --file Dockerfile --tag quintesse/door-opener-proxy:secure-${GITHUB_SHA::6}
