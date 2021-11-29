@@ -17,6 +17,21 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            quintesse/door-opener-proxy
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       -
@@ -35,7 +50,8 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: quintesse/door-opener-proxy:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v2
@@ -43,4 +59,4 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: quintesse/door-opener-proxy
-  
+          short-description: ${{ github.event.repository.description }}  
