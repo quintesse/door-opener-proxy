@@ -10,7 +10,7 @@ to open my door.
 
 For that I needed a simpler protocol but still have _some_ security.
 
-To that end I've created to different scripts:
+To that end I've created two different scripts:
 
 ## app.java
 
@@ -18,7 +18,7 @@ A very simple one that has almost no security, except through obscurity: [app.ja
 
 The script keeps track of unauthorized requests and will block an IP for 5 minutes if 3 failed attempts have been made.
 
-When run it starts up an endpoint that listens for requests on http://localhost:8080/open and takes just two parameters: a `token` and a `door`:
+When run, it starts up an endpoint that listens for requests on http://localhost:8080/open and takes just two parameters: a `token` and a `door`:
 
 - **token** - A security token. Defined at startup for each user.
 - **door** - A door identifier. Possible values are also defined at startup.
@@ -29,7 +29,7 @@ A more secure version that uses typical industry safety measures: [secure.java](
 
 The script keeps track of unauthorized requests and will block an IP or user for 5 minutes if 3 failed attempts have been made.
 
-When run it starts up an endpoint that also listens for requests on http://localhost:8080/open and takes the following parameters:
+When run, it starts up an endpoint that also listens for requests on http://localhost:8080/open and takes the following parameters:
 
 - **ts** - A timestamp of the moment the request is made.
 - **cd** - A random code.
